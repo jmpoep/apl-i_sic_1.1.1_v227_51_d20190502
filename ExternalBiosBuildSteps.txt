@@ -1,0 +1,14 @@
+﻿There are ApolloLake_PlatSample.7z and Broxton_SIC.7z, 
+if you want to build the external source code, you will also need to have below FWs and BuildTools in below path.
+
+Steps to build Fsp:
+
+1. Move %Root%/Silicon/BroxtonFspPkg/BuildScripts/*.* to %Root%/BuildScripts/*.*
+
+2. Move %Root%/Silicon/BroxtonFspPkg/BuildFsp.cmd, BuildFsp.py, Clean.py, edksetup.bat, edksetup.py, edksetup.sh to %Root%
+
+3. Move %Root%/Silicon/BroxtonFspPkg/*.* to %Root%/BroxtonFspPkg/*.*
+
+4. Move %Root%/Silicon/BroxtonFspBinPkg/*.* to %Root%/BroxtonFspBinPkg/*.*
+
+5. Execute "BuildFsp.cmd BXT /r" from %Root%

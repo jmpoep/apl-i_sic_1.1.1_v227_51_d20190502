@@ -1,0 +1,131 @@
+## @file
+# Component information file for the FSP Init Pre-Memory PEI module.
+#
+# @copyright
+#  INTEL CONFIDENTIAL
+#  Copyright 2014 - 2016 Intel Corporation.
+#
+#  The source code contained or described herein and all documents related to the
+#  source code ("Material") are owned by Intel Corporation or its suppliers or
+#  licensors. Title to the Material remains with Intel Corporation or its suppliers
+#  and licensors. The Material may contain trade secrets and proprietary and
+#  confidential information of Intel Corporation and its suppliers and licensors,
+#  and is protected by worldwide copyright and trade secret laws and treaty
+#  provisions. No part of the Material may be used, copied, reproduced, modified,
+#  published, uploaded, posted, transmitted, distributed, or disclosed in any way
+#  without Intel's prior express written permission.
+#
+#  No license under any patent, copyright, trade secret or other intellectual
+#  property right is granted to or conferred upon you by disclosure or delivery
+#  of the Materials, either expressly, by implication, inducement, estoppel or
+#  otherwise. Any license under such intellectual property rights must be
+#  express and approved by Intel in writing.
+#
+#  Unless otherwise agreed by Intel in writing, you may not remove or alter
+#  this notice or any other notice embedded in Materials by Intel or
+#  Intel's suppliers or licensors in any way.
+#
+#  This file contains an 'Intel Peripheral Driver' and is uniquely identified as
+#  "Intel Reference Module" and is licensed for Intel CPUs and chipsets under
+#  the terms of your license agreement with Intel or your vendor. This file may
+#  be modified by the user, subject to additional terms of the license agreement.
+#
+#@par Specification Reference:
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = FspInitPreMem
+  FILE_GUID                      = 9E1CC850-6731-4848-8752-6673C7005EEE
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = FspInitPreMemEntryPoint
+
+[Sources]
+  FspMrcData.c
+  FspDramPpi.c
+  FspInitPreMem.h
+  FspInitPreMem.c
+  FspBoardGpiosPreMem.h
+  FspBoardGpiosPreMem.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IntelFsp2Pkg/IntelFsp2Pkg.dec
+  BroxtonFspPkg/BroxtonFspPkg.dec
+  Silicon/BroxtonSiPkg/BroxtonSiPkg.dec
+  ClientSiliconPkg/ClientSiliconPkg.dec
+  Silicon/BroxtonSiPkg/NorthCluster/MemoryInit/MemoryInit.dec
+
+[Ppis]
+  gEfiPeiResetPpiGuid                       ## PRODUCES
+  gEfiPeiMemoryDiscoveredPpiGuid            ## NOTIFY
+  gEfiPeiMasterBootModePpiGuid              ## PRODUCES
+  gSiPolicyPpiGuid                          ## PRODUCES
+  gScPreMemPolicyPpiGuid                    ## PRODUCES
+  gSiCpuPolicyPpiGuid                       ## PRODUCES
+  gSiSaPolicyPpiGuid                        ## PRODUCES
+  gEfiTemporaryRamSupportPpiGuid
+  gDramPolicyPpiGuid
+  gSiSaPreMemPolicyPpiGuid
+  gEfiPeiVirtualBlockIoPpiGuid              ## SOMETIMES_CONSUMES
+
+[Guids]
+  gEfiPlatformInfoGuid                      ## ALWAYS_CONSUMED
+  gFspSiliconFvGuid                         ## CONSUMES
+  gFspHeaderFileGuid                        ## PRODUCES
+  gFspReservedMemoryResourceHobGuid         ## CONSUMES
+  gFspBootLoaderTolumHobGuid                ## CONSUMES
+  gFspNonVolatileStorageHobGuid             ## CONSUMES
+  gEfiEventReadyToBootGuid                  ## CONSUMES ## Event
+
+[Protocols]
+  gEfiPciEnumerationCompleteProtocolGuid            ## CONSUMES
+
+
+[Pcd]
+  gBroxtonFspPkgTokenSpaceGuid.PcdFlashFvFspmSize
+  gIntelFsp2PkgTokenSpaceGuid.PcdTemporaryRamBase
+  gIntelFsp2PkgTokenSpaceGuid.PcdTemporaryRamSize
+  gIntelFsp2PkgTokenSpaceGuid.PcdFspReservedBufferSize      ## CONSUMES
+  gIntelFsp2PkgTokenSpaceGuid.PcdFspReservedMemoryLength
+  gIntelFsp2PkgTokenSpaceGuid.PcdFspAreaSize
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+  gEfiBxtTokenSpaceGuid.PcdScAcpiIoPortBaseAddress          ## CONSUMES
+  gEfiBxtTokenSpaceGuid.PcdIafwPlatformInfo                 ## PRODUCES
+  gEfiBxtTokenSpaceGuid.PcdPmcSsramBaseAddress0             ## CONSUMES
+  gEfiBxtTokenSpaceGuid.PcdPmcSsramBaseAddress1             ## CONSUMES
+  gEfiBxtTokenSpaceGuid.PcdPlatformIdRegisterOffset         ## CONSUMES
+  gEfiBxtTokenSpaceGuid.PcdPmcIpc1BaseAddress0              ## CONSUMES
+
+[LibraryClasses]
+  #
+  # Generic library class
+  #
+  PeimEntryPoint
+  CacheLib
+  SeCUmaLib
+  FspPlatformLib
+  CpuPlatformLib
+  PeiScPolicyLib
+  PeiSaPolicyLib
+  ConfigBlockLib
+  CpuPolicyLib
+  PeiSiPolicyLib
+  PeiPolicyUpdatePreMemLib
+  PeiPolicyUpdateLib
+  FspSwitchStackLib
+  GpioLib
+  FspCommonLib
+  MmcMediaDevicePeiPolicyLib
+  BpdtLib
+  Heci2PowerManagementLib
+
+[Depex]
+  TRUE
+
+[BuildOptions]
+    *_*_*_CC_FLAGS  = -DEFI_MEMORY_INIT -DMRC_DATA_REQUIRED_FROM_OUTSIDE
+

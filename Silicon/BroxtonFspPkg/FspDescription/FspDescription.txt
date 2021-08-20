@@ -1,0 +1,2 @@
+This FSP supports the following:
+Apollo Lake Ax/Bx SOC

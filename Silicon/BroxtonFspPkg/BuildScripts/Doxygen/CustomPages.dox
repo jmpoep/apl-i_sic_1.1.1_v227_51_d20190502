@@ -1,0 +1,151 @@
+/*! \mainpage About Broxton Build Scripts
+ *
+ * \section intro_sec Introduction
+ *  The Broxton Build Scripts are used to simplify the IAFW build process for 
+ *  developers. Many of the EDK II / UEFI build process is automated in these scripts.
+ *  These Python scripts are migrated from their respective Batch and Shell versions
+ *  to increase the ease of use and ease of maintainability.
+ * 
+ * \section python_advtanges Advantages of Using Python
+ *  There are multiple advantages to using Python over Shell or Batch scripting:
+ *  <ul>
+ *    <li> OS Agnostic </li>
+ *    <li> Easier to Understand </li>
+ *    <li> Easier to Maintain </li>
+ *    <li> Easier to Edit </li>
+ *    <li> More Scalable </li>
+ *  </ul>
+ *  
+ *  To put it simply, developers tend to prefer developing over dealing with the build process.
+ *  Using Python can make the build process easier to work with, allowing developers to spend
+ *  more of their time actually developing. 
+ *  
+ * \section design Design Considerations
+ * To implement the advantages of Python, there are some considerations put into 
+ *  the script design.
+ *    \subsection structure Script Structure
+ *      There are three types of scripts in the current design. 
+ *      <ol>
+ *        <li>Top Level Scripts</li>
+ *        <li>Helper Function Modules</li>
+ *        <li>Standalone Tools</li>
+ *      </ol>
+ *      <b>Top Level</b> scripts are the entry points into the build process. Currently,
+ *      this includes the BuildIFWI and IfwiStitch scripts. They are meant to be ran
+ *      from a command line interface (CLI) and have arguments managed by the 
+ *      IfwiConfiguration.conf system.
+ *      
+ *      <b>Helper Function Modules</b> are python modules that contain a list of "Helper Functions"
+ *      that abstract parts of the build process to help organize functionality and increase 
+ *      readability and manageability of the Top Level scripts. These tools are made extensible by the 
+ *      variables that are passed in, so that their internal code rarely needs to be modified. 
+ *      This also promotes scalability as future build processes can utilize these steps.
+ *      
+ *      <b>Standalone Tool</b> scripts provide functionality that can be a part of the build process or
+ *      simply ran on their own. They have both a method call entry point via a Run() call and a 
+ *      CLI entry point that takes arguments. They manage their own arguments and are not included
+ *      in the IfwiConfiguration.conf argument system. 
+ *      
+ *    \subsection configuration_system IfwiConfiguration.conf 
+ *      A one-stop shop for managing Top Level script arguments.   
+ *       In this file, you can add or remove arguments and they will show up in BuildIFWI
+ *       or IfwiStitch under the relevant namespace variable (e.g. Args) as long you
+ *       follow a few simple rules!
+ *      
+ *       This file is used to generate the CLI arguments and parse them. If you change something in it,
+ *       it changes for the CLI arguments as well!
+ *      
+ *       As always, the order of precedence of arguments is as follows:
+ *       For BuildIfwi:
+ *           1. CLI arguments
+ *           2. This IFWI Configuration file arguments (default)
+ *       For IfwiStitch:
+ *           1. Arguments parsed from the Zip filename
+ *           2. CLI Arguments
+ *           3. This IFWI Configuration file arguments (default)
+ *      
+ *       Rules:
+ *       1. Each option is it's own section (e.g. [ArgumentName])
+ *       2. It must have at least 4 attributes:
+ *       <ol>     
+ *           <li>Value: The default value for the option, of boolean or string type.
+ *                  Valid boolean values are ['True', 'False', 'On', 'Off', '0', '1'] </li>
+ *           <li>Flag: The flag that triggers the argument in CLI (e.g. /Argument)</li>
+ *           <li>Help: The help text for the argument</li>
+ *           <li>Target: The top level script(s) that will use the argument (e.g. BuildIFWI, IfwiStitch)</li>
+ *       </ol>
+ *       3. It can use an additional 3 attributes:
+ *       <ul>
+ *           <li>Required:       ArgumentName == SomeValue
+ *                           <br>This allows for dynamic argument requirement checking. Currently only
+ *                           supports the == operator and this format. Can be extended for additional operators.</br>
+ *                           <br>Example:</br>
+ *                                 <br>[SvBios]</br>
+ *                                 <br>Required: Arch == X64</br></li>
+ *           <li>Choices:        ['Choice1', 'Choice2']
+ *                           <br>Here you can specify the valid choices for the argument. Please only use
+ *                           Single quotation marks.</br>
+ *                           <br>Example:</br>
+ *                                 <br>[PlatformType]</br>
+ *                                 <br>Choices: ['BXTM', 'APLK', 'APLI']</br></li>
+ *           <li>SectionHeader:  The Section Header text you want displayed for each option group.
+ *                           Please do not use any other attributes for this argument. It is purely
+ *                           for nicer output when someone uses the help command on BuildIfwi or IfwiStitch.
+ *                           No quotation marks needed.</li>
+ *      </ul>
+ *       If you are planning to add/modify/remove any arguments in this file, all you have to do is follow
+ *       the above rules. At the Parse Arguments stage of the BuildIfwi and IfwiStitch process, the Args object
+ *       will have the correct values in the form of Args.ArgumentName
+ *      
+ *       Here is a list of the methods and their modules that utilize this file format:
+ *       <ul>
+ *          <li>CommonHelperFunctions.ParseConfigFile</li>
+ *          <li>CommonHelperFunctions.ParseArguments</li>
+ *          <li>CommonHelperFunctions.CheckArgRequirements</li>
+ *          <li>BuildHelperFunctions.AssembleArgumentFlags</li>
+ *          <li>StitchHelperFunctions.ParseZipFileName</li>
+ *      </ul>
+ *       And a basic overview of how this works:
+ *           <br>The ConfigParser object created from this file is used to populate the CLI arguments.
+ *           It is also used to set defaults, help text, values, etc. After parsing the CLI arguments into an object,
+ *           requirements are checked. In BuildIFWI, the contents of this file are leveraged against the CLI arguments to
+ *           construct the call string for IfwiStitch. In IfwiStitch, they are used to parse the zip file name for
+ *           arguments. This is all done dynamically, and any changes made to this file will be handled automatically
+ *           during these methods as long as the rules are obeyed.</br>
+ *
+ 
+ *  \section how_to_use Using the Build Scripts
+ *  The steps for building an IFWI are very simple:
+ *      <ol>
+ *          <li>Determine the arguments you want to use (see IfwiConfiguration.conf)</li>
+ *          <li>(Optional) Change default argument values in IfwiConfiguration.conf</li>
+ *          <li>Run 'python BuildIFWI.py [args (Optional. Check IfwiConfiguration.conf for flags and formatting)] </li>
+ *          <li>Wait for the build to finish</li>
+ *          <li>Grab your relevant IFWI images out of the /Stitch directory</li>
+ *      </ol>
+ *  
+ * \page faq FAQ
+ *  \section faq_no_python Can I still build without Python 2.7 installed on my machine?
+ *    Yes! In the root directory, there is a lightweight python interpreter called 'pylite.exe'. It was frozen using
+ *    only the python libraries that these build scripts use, so it is only 6 megabytes. Just replace 'python' in your 
+ *    call string with 'pylite.exe'. 
+ *
+ * \page build_ifwi BuildIFWI
+ *  \section about_build_ifwi About
+ *  A top level python script to build BIOS firmware and invoke stitching the entire IFWI.
+ *  \section build_ifwi_code_flow BuildIFWI Code Flow
+ *    <img src="BuildFlowV1.jpg" align="middle">
+ * 
+ * \page build_fsp BuildFsp
+ *  \section about_build_fsp About
+ *  A Standalone Tool python script to build FSP IAFW.
+ *  \section build_fsp_code_flow BuildFsp Code Flow
+ *    <img src="FSPBuildFlow.jpg" align="middle">
+ *  
+ * \page ifwi_stitch IfwiStitch
+ *  \section about_ifwi_stitch About
+ *  A top level python script to stitch components into IAFW.
+ *  \section ifwi_stitch_code_flow IfwiStitch Code Flow
+ *    <img src="ifwistichcodeflow_0_2.jpg" align="middle">
+ * 
+ */
